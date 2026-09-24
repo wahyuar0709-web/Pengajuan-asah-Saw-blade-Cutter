@@ -204,6 +204,8 @@
   .cfg-status.ok{ color:#7fcf93; }
   .cfg-status.bad{ color:#ff9c8f; }
   .cfg-actions{ flex-wrap:wrap; }
+  .stamp.pending{ border-color:var(--warn); color:var(--warn); font-size:22px; }
+  .success .pending-note{ background:var(--warn-bg); border:1px solid var(--warn); color:var(--warn); border-radius:6px; padding:10px 12px; margin:16px auto 0; max-width:300px; font-size:13px; font-weight:600; line-height:1.5; }
   @media (prefers-reduced-motion:reduce){
     .stamp{ animation:none; transform:rotate(-8deg) scale(1); opacity:1; }
     button.submit{ transition:none; }
@@ -239,7 +241,7 @@
 
           <div class="field">
             <label for="fOperator">Nama Pengaju / Operator <span class="req">*</span></label>
-            <input type="text" id="fOperator" placeholder="Nama lengkap operator produksi" list="operatorList" autocomplete="off">
+            <input type="text" id="fOperator" placeholder="Nama lengkap operator produksi" maxlength="60" list="operatorList" autocomplete="off">
             <datalist id="operatorList"></datalist>
           </div>
 
@@ -266,9 +268,9 @@
                 <option value="">— Cari dari semua alat / semua mesin —</option>
               </select>
               <div class="manual-grid" id="manualGrid" style="display:none">
-                <input type="text" id="mKode" placeholder="Kode alat, mis. XYZ-SB-01">
-                <input type="text" id="mBrand" placeholder="Brand / merk">
-                <input type="text" id="mSpek" placeholder="Spesifikasi / ukuran">
+                <input type="text" id="mKode" maxlength="40" placeholder="Kode alat, mis. XYZ-SB-01">
+                <input type="text" id="mBrand" maxlength="40" placeholder="Brand / merk">
+                <input type="text" id="mSpek" maxlength="120" placeholder="Spesifikasi / ukuran">
               </div>
             </div>
           </div>
@@ -277,9 +279,9 @@
             <label for="fQty">Jumlah (Qty) <span class="req">*</span></label>
             <div class="qty-row">
               <div class="stepper">
-                <button type="button" id="qtyMinus">−</button>
+                <button type="button" id="qtyMinus" aria-label="Kurangi jumlah">−</button>
                 <input type="text" id="fQty" value="1" inputmode="numeric">
-                <button type="button" id="qtyPlus">+</button>
+                <button type="button" id="qtyPlus" aria-label="Tambah jumlah">+</button>
               </div>
             </div>
           </div>
@@ -299,9 +301,9 @@
             <label for="fPemakaian">Aktual Pemakaian di Mesin <span class="hint">opsional</span></label>
             <div class="qty-row">
               <div class="stepper" style="flex:0 0 auto">
-                <button type="button" id="pmkMinus">−</button>
+                <button type="button" id="pmkMinus" aria-label="Kurangi lama pemakaian">−</button>
                 <input type="text" id="fPemakaian" value="0" inputmode="numeric">
-                <button type="button" id="pmkPlus">+</button>
+                <button type="button" id="pmkPlus" aria-label="Tambah lama pemakaian">+</button>
               </div>
               <div class="unit-toggle" id="unitToggle" role="group" aria-label="Satuan pemakaian">
                 <button type="button" class="on" data-u="Hari" aria-pressed="true">Hari</button>
@@ -316,13 +318,13 @@
             <button type="button" class="photo-zone" id="photoZoneBtn">📷 Ambil / Pilih Foto</button>
             <div class="photo-preview" id="photoPreview" style="display:none">
               <img id="photoImg" alt="Preview foto alat">
-              <button type="button" id="photoRemove">×</button>
+              <button type="button" id="photoRemove" aria-label="Hapus foto">×</button>
             </div>
           </div>
 
           <div class="field" style="margin-bottom:6px">
             <label for="fCatatan">Catatan <span class="hint">opsional</span></label>
-            <textarea id="fCatatan" placeholder="Contoh: gigi pecah 2 buah di sisi kiri…"></textarea>
+            <textarea id="fCatatan" maxlength="500" placeholder="Contoh: gigi pecah 2 buah di sisi kiri…"></textarea>
           </div>
 
           <hr class="divider">
@@ -335,8 +337,9 @@
       </div>
 
       <div class="success" id="successView">
-        <div class="stamp">Diterima</div>
+        <div class="stamp" id="stampText">Diterima</div>
         <div class="tnum">No. Tiket<br><b id="doneTicket">—</b></div>
+        <div class="pending-note" id="pendingNote" role="alert" style="display:none"></div>
         <p id="doneDetail">Pengajuan asah telah tercatat. Gudang akan mengonfirmasi &amp; menjadwalkan pengiriman ke vendor.</p>
         <button id="btnAgain">+ Ajukan Alat Lain</button>
       </div>
@@ -363,8 +366,8 @@
     <div class="cfg-box">
       <h3>Tambah Mesin Baru</h3>
       <p>Mesin ini tersimpan di perangkat ini dan langsung bisa dipilih. Alat untuk mesin baru belum terdaftar otomatis — gunakan "Pilih ukuran lain" di bawah untuk cari alat dari mesin lain, atau isi manual.</p>
-      <input type="text" id="newMesinCode" placeholder="Kode mesin, mis. RDS050" style="width:100%">
-      <input type="text" id="newMesinName" placeholder="Nama proses / mesin, mis. Rip Saw" style="width:100%">
+      <input type="text" id="newMesinCode" maxlength="12" placeholder="Kode mesin, mis. RDS050" style="width:100%">
+      <input type="text" id="newMesinName" maxlength="60" placeholder="Nama proses / mesin, mis. Rip Saw" style="width:100%">
       <div class="cfg-actions">
         <button class="close" id="mesinClose">Batal</button>
         <button class="save" id="mesinSave">Tambah &amp; Pilih</button>
@@ -557,12 +560,25 @@
 
   /* ---------- mesin baru (lokal) ---------- */
   var mesinModal = $('mesinModal'), cfgModal = $('cfgModal');
-  function openModal(el, focusId){ el.style.display = 'flex'; if(focusId) $(focusId).focus(); }
+  var lastFocus = null;
+  function openModal(el, focusId){ lastFocus = document.activeElement; el.style.display = 'flex'; if(focusId) $(focusId).focus(); }
+  function closeModal(el){ el.style.display = 'none'; if(lastFocus && lastFocus.focus){ try{ lastFocus.focus(); }catch(e){} } }
+  function trapTab(e){
+    if(e.key !== 'Tab') return;
+    var m = cfgModal.style.display === 'flex' ? cfgModal : (mesinModal.style.display === 'flex' ? mesinModal : null);
+    if(!m) return;
+    var f = m.querySelectorAll('button, input, select, textarea, [href]');
+    if(!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+  document.addEventListener('keydown', trapTab);
   $('btnAddMesin').addEventListener('click', function(){
     $('newMesinCode').value = ''; $('newMesinName').value = '';
     openModal(mesinModal, 'newMesinCode');
   });
-  $('mesinClose').addEventListener('click', function(){ mesinModal.style.display = 'none'; });
+  $('mesinClose').addEventListener('click', function(){ closeModal(mesinModal); });
   $('mesinSave').addEventListener('click', function(){
     var code = $('newMesinCode').value.trim().toUpperCase();
     var name = $('newMesinName').value.trim();
@@ -572,7 +588,7 @@
     lsSet(LS.custom, custom);
     indexData(); renderMachines(code);
     mesinSel.value = code; mesinSel.dispatchEvent(new Event('change'));
-    mesinModal.style.display = 'none';
+    closeModal(mesinModal);
     altBox.style.display = 'block';
     toggleAltBtn.setAttribute('aria-expanded', 'true');
     toggleAltBtn.textContent = 'Sembunyikan pilihan lain ▴';
@@ -674,7 +690,7 @@
     cfgInput.value = getApiUrl(); cfgStatus.textContent = '';
     openModal(cfgModal, 'cfgApiUrl');
   });
-  $('cfgClose').addEventListener('click', function(){ cfgModal.style.display = 'none'; });
+  $('cfgClose').addEventListener('click', function(){ closeModal(cfgModal); });
   function validApiUrl(v){ return /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(v); }
   function saveApiUrl(){
     var v = cfgInput.value.trim();
@@ -682,20 +698,21 @@
     try{ if(v) localStorage.setItem(LS.api, v); else localStorage.removeItem(LS.api); }catch(e){}
     return true;
   }
-  $('cfgSave').addEventListener('click', function(){ if(saveApiUrl()) cfgModal.style.display = 'none'; });
+  $('cfgSave').addEventListener('click', function(){ if(saveApiUrl()) closeModal(cfgModal); });
   $('cfgTest').addEventListener('click', function(){
     if(!saveApiUrl()) return;
     cfgStatus.className = 'cfg-status'; cfgStatus.textContent = 'Menguji koneksi…';
     refreshMaster(true).then(function(m){
       cfgStatus.className = 'cfg-status ok';
-      cfgStatus.textContent = 'Tersambung. ' + m.machines.length + ' mesin & ' + (m.allTools || []).length + ' alat dimuat dari sheet.';
+      cfgStatus.textContent = 'Tersambung. ' + m.machines.length + ' mesin & ' + (m.allTools || []).length + ' alat dimuat dari sheet.' +
+        (m.warnings && m.warnings.length ? ' Peringatan: ' + m.warnings.join(' ') : '');
     }).catch(function(e){
       cfgStatus.className = 'cfg-status bad';
       cfgStatus.textContent = 'Gagal: ' + (e && e.message ? e.message : 'tidak terhubung') + '. Cek deployment (akses "Anyone") & token.';
     });
   });
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape'){ cfgModal.style.display = 'none'; mesinModal.style.display = 'none'; }
+    if(e.key === 'Escape'){ if(cfgModal.style.display === 'flex') closeModal(cfgModal); if(mesinModal.style.display === 'flex') closeModal(mesinModal); }
   });
 
   /* ---------- pengiriman: antrean offline, retry, dedupe ---------- */
@@ -709,8 +726,8 @@
   }
   function updateFlag(){
     var q = getQueue(), f = getFailed(), msg = '';
-    if(!navigator.onLine) msg = 'Tidak ada koneksi — ' + (q.length ? q.length + ' pengajuan tersimpan & dikirim otomatis nanti' : 'pengajuan akan disimpan & dikirim otomatis nanti');
-    else if(q.length) msg = q.length + ' pengajuan menunggu dikirim…';
+    if(!navigator.onLine) msg = 'Tidak ada koneksi — ' + (q.length ? q.length + ' pengajuan BELUM TERKIRIM. Buka aplikasi ini lagi saat ada sinyal dan tunggu banner ini hilang' : 'pengajuan akan disimpan; buka aplikasi ini lagi saat ada sinyal agar terkirim');
+    else if(q.length) msg = q.length + ' pengajuan belum terkirim — jangan tutup aplikasi sampai banner ini hilang…';
     if(f.length) msg += (msg ? ' · ' : '') + f.length + ' pengajuan ditolak server (' + f.slice(0, 3).map(function(x){ return x.ticket; }).join(', ') + ')';
     flag.style.display = msg ? 'flex' : 'none';
     flagText.textContent = msg;
@@ -794,7 +811,9 @@
     if(!kondisi){ showError('Pilih kondisi alat.'); return; }
     if(kondisi === 'Lainnya' && !catatan){ showError('Kondisi "Lainnya" wajib dijelaskan di kolom Catatan.'); $('fCatatan').focus(); return; }
 
-    var qty = Math.max(1, Math.min(999, parseInt($('fQty').value, 10) || 1));
+    var qty = parseInt($('fQty').value, 10);
+    if(!(qty >= 1)){ showError('Isi jumlah (minimal 1).'); $('fQty').focus(); return; }
+    qty = Math.min(999, qty);
     var pemakaian = Math.max(0, parseInt($('fPemakaian').value, 10) || 0);
 
     var payload = {
@@ -810,7 +829,8 @@
       kondisi: kondisi,
       pemakaian: pemakaian > 0 ? pemakaian + ' ' + pemakaianUnit : '',
       catatan: catatan,
-      foto: fotoBase64 || ''
+      foto: fotoBase64 || '',
+      manual: altSel.value === 'manual'
     };
     saveOperator(operator);
     submitPayload(payload);
@@ -836,16 +856,24 @@
   function showSuccess(payload, o){
     $('formView').style.display = 'none';
     $('successView').style.display = 'block';
-    $('doneTicket').textContent = payload.ticket;
+    var finalTicket = (o.res && o.res.ticket) || payload.ticket;
+    $('doneTicket').textContent = finalTicket;
+    var stamp = $('stampText'), note = $('pendingNote');
     var t;
     if(o.queued){
-      t = 'Belum ada koneksi ke server — pengajuan tersimpan di perangkat ini dan akan terkirim otomatis begitu online kembali.';
+      stamp.textContent = 'Belum Terkirim'; stamp.className = 'stamp pending';
+      note.style.display = 'block';
+      note.textContent = 'BELUM SAMPAI KE GUDANG. Buka aplikasi ini lagi saat ada sinyal — pengajuan terkirim otomatis.';
+      t = 'Pengajuan tersimpan di perangkat ini. Catat nomor tiket di atas, dan pastikan aplikasi dibuka lagi sampai terkirim.';
       if(o.fotoDropped) t += ' Foto tidak ikut tersimpan (memori penuh); tunjukkan alat langsung ke gudang.';
-    } else if(o.res && o.res.duplicate){
-      t = 'Pengajuan dengan tiket ini sudah tercatat sebelumnya. Tidak ada data ganda.';
     } else {
-      t = 'Pengajuan asah untuk ' + payload.spesifikasi + ' (' + payload.qty + ' unit) telah tercatat. Gudang akan verifikasi & menjadwalkan pengiriman ke vendor.';
-      if(o.res && o.res.fotoError) t += ' Foto gagal disimpan; tunjukkan alat langsung ke gudang.';
+      stamp.textContent = 'Diterima'; stamp.className = 'stamp'; note.style.display = 'none';
+      if(o.res && o.res.duplicate){
+        t = 'Pengajuan dengan tiket ini sudah tercatat sebelumnya. Tidak ada data ganda.';
+      } else {
+        t = 'Pengajuan asah untuk ' + payload.spesifikasi + ' (' + payload.qty + ' unit) telah tercatat. Gudang akan verifikasi & menjadwalkan pengiriman ke vendor.';
+        if(o.res && o.res.fotoError) t += ' Foto gagal disimpan (' + o.res.fotoError + '); tunjukkan alat langsung ke gudang.';
+      }
     }
     $('doneDetail').textContent = t;
     $('btnAgain').focus();
@@ -854,6 +882,7 @@
   $('btnAgain').addEventListener('click', function(){
     $('successView').style.display = 'none';
     $('formView').style.display = 'block';
+    $('stampText').textContent = 'Diterima'; $('stampText').className = 'stamp'; $('pendingNote').style.display = 'none';
     currentTicket = genTicketNo();
     $('ticketNo').textContent = currentTicket;
     $('ticketDate').textContent = fmtDate(new Date());
@@ -861,6 +890,10 @@
     $('fQty').value = '1'; $('fPemakaian').value = '0'; $('fCatatan').value = '';
     setKondisi(null); clearPhoto(); clearError();
   });
+  /* ---------- offline: service worker ---------- */
+  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  }
 })();
 </script>
 </body>

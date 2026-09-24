@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pengajuan Asah — RDI Tools</title>
+<meta name="theme-color" content="#1a1c1e">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -182,6 +186,7 @@
   .cfg-actions .save{ background:var(--spark); border-color:var(--spark-dark); color:#241000; }
   .cfg-actions .close{ background:transparent; color:var(--steel-text); }
 
+  .logo{ display:block; margin:0 auto 10px; width:52px; height:52px; border-radius:12px; }
   /* ===== v2: aksesibilitas & komponen baru ===== */
   input[type=text], input[type=number], select, textarea{ font-size:16px; }
   .field label .hint{ color:#655d4a; }
@@ -218,6 +223,7 @@
 
       <div id="formView">
         <div class="head">
+          <img class="logo" src="logo.svg" alt="Logo RDI" width="52" height="52" onerror="this.style.display='none'">
           <div class="eyebrow">Form Internal · Gudang RDI</div>
           <div class="title">Pengajuan Asah</div>
           <div class="sub">Ajukan alat potong tumpul untuk dikirim ke vendor asah</div>

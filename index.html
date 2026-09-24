@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pengajuan Asah — RDI Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1a1c1e;
+    --bg-2:#212427;
+    --metal:#3a3f45;
+    --metal-line:#4a5057;
+    --kraft:#e9ddc0;
+    --kraft-2:#ded0ab;
+    --kraft-shadow:#c9b98c;
+    --ink:#28241b;
+    --ink-soft:#5b5442;
+    --spark:#ef7b2c;
+    --spark-dark:#c25f18;
+    --ok:#3f7a4c;
+    --ok-bg:#e4efe1;
+    --warn:#b3392b;
+    --warn-bg:#f4e2dd;
+    --steel-text:#c7ccd1;
+    --steel-dim:#7d868d;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(1100px 700px at 50% -10%, #2a2e32 0%, var(--bg) 55%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 2px, transparent 2px 26px);
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--steel-text);
+    display:flex;
+    justify-content:center;
+    padding:28px 14px 60px;
+  }
+  .floor-label{
+    position:fixed; top:16px; left:0; right:0; text-align:center;
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.14em;
+    color:var(--steel-dim); pointer-events:none; text-transform:uppercase;
+  }
+  .wrap{ width:100%; max-width:460px; margin-top:26px; }
+  .hanger{ display:flex; justify-content:center; margin-bottom:-14px; position:relative; z-index:2; }
+  .hanger svg{ filter:drop-shadow(0 3px 3px rgba(0,0,0,.45)); }
+  .ticket{
+    position:relative;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,0) 8%),
+      var(--kraft);
+    border-radius:6px;
+    box-shadow:0 22px 50px -18px rgba(0,0,0,.65), 0 2px 0 rgba(255,255,255,.15) inset;
+    color:var(--ink);
+    overflow:hidden;
+  }
+  .ticket::before{
+    content:''; position:absolute; inset:0; pointer-events:none; opacity:.5;
+    background-image: radial-gradient(rgba(0,0,0,.05) 1px, transparent 1px);
+    background-size:3px 3px;
+  }
+  .punch{
+    width:20px; height:20px; border-radius:50%;
+    background:radial-gradient(circle at 35% 32%, #3a3d40, #16171a 70%);
+    box-shadow:inset 0 2px 3px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.05);
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    z-index:3;
+  }
+  .head{ padding:34px 26px 18px; text-align:center; border-bottom:2px dashed var(--kraft-shadow); position:relative; }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em; color:var(--ink-soft); text-transform:uppercase; }
+  .title{ font-family:'Oswald',sans-serif; font-weight:700; font-size:29px; letter-spacing:.01em; margin:6px 0 4px; color:var(--ink); }
+  .sub{ font-size:13px; color:var(--ink-soft); }
+  .ticket-meta{
+    display:flex; justify-content:space-between; margin-top:16px;
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-soft);
+    border-top:1px solid var(--kraft-shadow); padding-top:10px;
+  }
+  .ticket-meta b{ color:var(--ink); }
+  .body{ padding:22px 24px 26px; }
+  .field{ margin-bottom:18px; }
+  .field label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; letter-spacing:.01em; }
+  .field label .req{ color:var(--warn); }
+  .field label .hint{ font-weight:400; color:var(--kraft-shadow); margin-left:4px; }
+  input[type=text], input[type=number], select, textarea{
+    width:100%; font-family:'Inter',sans-serif; font-size:15px; color:var(--ink);
+    background:rgba(255,255,255,.35); border:none;
+    border-bottom:2px solid var(--ink-soft);
+    padding:10px 4px 9px; outline:none; transition:border-color .15s, background .15s;
+    appearance:none; -webkit-appearance:none; border-radius:2px 2px 0 0;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9'><path d='M1 1l6 6 6-6' stroke='%2328241b' stroke-width='2' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 6px center; padding-right:26px;
+  }
+  input:focus, select:focus, textarea:focus{ border-color:var(--spark); background:rgba(255,255,255,.55); }
+  textarea{ resize:vertical; min-height:64px; border:2px solid var(--ink-soft); border-radius:4px; padding:9px 10px; background:rgba(255,255,255,.35);}
+  textarea:focus{ border-color:var(--spark); }
+  ::placeholder{ color:#9a927a; }
+  select:disabled, input:disabled{ opacity:.4; }
+  .tool-preview{ margin-top:7px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink-soft); min-height:16px; }
+  .tool-preview b{ color:var(--ink); }
+  .link-btn{
+    display:inline-block; margin-top:9px; background:none; border:none; padding:0;
+    font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; color:var(--spark-dark);
+    cursor:pointer; text-decoration:underline; text-underline-offset:2px;
+  }
+  .alt-box{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--kraft-shadow); }
+  .manual-grid{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:8px; }
+  .manual-grid input{ font-size:13.5px; }
+  .mesin-row{ display:flex; gap:10px; align-items:center; }
+  .mesin-row select{ flex:1; }
+  .qty-row{ display:flex; align-items:stretch; gap:10px; }
+  .stepper{ display:flex; align-items:center; border:2px solid var(--ink-soft); border-radius:6px; overflow:hidden; background:rgba(255,255,255,.35); }
+  .stepper button{ width:42px; border:none; background:transparent; font-size:20px; color:var(--ink); cursor:pointer; font-weight:600; }
+  .stepper button:active{ background:rgba(0,0,0,.08); }
+  .stepper input{ width:52px; text-align:center; border:none; border-left:1px solid var(--kraft-shadow); border-right:1px solid var(--kraft-shadow); background:transparent; padding:9px 0; }
+  .unit-toggle{ display:flex; border:2px solid var(--ink-soft); border-radius:6px; overflow:hidden; flex:1; }
+  .unit-toggle button{ flex:1; border:none; background:transparent; padding:0 8px; font-size:13px; color:var(--ink-soft); cursor:pointer; font-family:'Inter',sans-serif; }
+  .unit-toggle button.on{ background:var(--ink-soft); color:var(--kraft); font-weight:600; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ padding:8px 13px; border-radius:999px; border:2px solid var(--ink-soft); font-size:13.5px; color:var(--ink-soft); cursor:pointer; font-weight:500; background:transparent; transition:all .12s; }
+  .chip.on{ background:var(--spark); border-color:var(--spark-dark); color:#241000; font-weight:700; box-shadow:0 2px 0 var(--spark-dark); }
+  .photo-zone{
+    width:100%; padding:16px; border:2px dashed var(--ink-soft); border-radius:8px;
+    background:rgba(255,255,255,.25); color:var(--ink-soft); font-family:'Inter',sans-serif;
+    font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .photo-zone:active{ background:rgba(255,255,255,.4); }
+  .photo-preview{ position:relative; margin-top:10px; display:inline-block; }
+  .photo-preview img{ width:120px; height:120px; object-fit:cover; border-radius:8px; border:2px solid var(--ink-soft); display:block; }
+  .photo-preview button{
+    position:absolute; top:-8px; right:-8px; width:24px; height:24px; border-radius:50%;
+    background:var(--warn); color:#fff; border:2px solid var(--kraft); font-size:14px; line-height:1;
+    cursor:pointer; font-weight:700;
+  }
+  .divider{ border:none; border-top:1px dashed var(--kraft-shadow); margin:22px 0 18px; }
+  .submit-wrap{ margin-top:6px; }
+  button.submit{
+    width:100%; padding:16px; font-family:'Oswald',sans-serif; font-size:18px;
+    letter-spacing:.06em; font-weight:600; color:#2a1200; text-transform:uppercase;
+    background:linear-gradient(180deg, #ff9548, var(--spark) 55%, var(--spark-dark));
+    border:none; border-radius:8px; cursor:pointer;
+    box-shadow:0 5px 0 var(--spark-dark), 0 10px 18px -8px rgba(194,95,24,.6);
+    transition:transform .08s;
+  }
+  button.submit:active{ transform:translateY(3px); box-shadow:0 2px 0 var(--spark-dark); }
+  button.submit:disabled{ opacity:.55; cursor:progress; box-shadow:0 5px 0 var(--spark-dark); }
+  .footnote{ text-align:center; font-size:11.5px; color:var(--ink-soft); margin-top:12px; line-height:1.5; }
+  .errbox{ background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn); border-radius:6px; padding:9px 11px; font-size:12.5px; margin-bottom:14px; display:none; }
+  .offline-flag{ display:none; align-items:center; gap:6px; background:#fff2df; border:1px solid #d7a24d; color:#7a5410; font-size:12px; padding:7px 10px; border-radius:6px; margin-bottom:14px; }
+  .dot{ width:7px; height:7px; border-radius:50%; background:#d7a24d; flex:none; }
+  .success{ display:none; padding:44px 24px 40px; text-align:center; position:relative; }
+  .stamp{
+    display:inline-block; border:5px solid var(--ok); color:var(--ok);
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:27px; letter-spacing:.06em;
+    padding:10px 22px; border-radius:10px; transform:rotate(-8deg) scale(0);
+    text-transform:uppercase; animation:stampin .38s cubic-bezier(.2,1.4,.4,1) .1s forwards;
+  }
+  @keyframes stampin{ 0%{ transform:rotate(-8deg) scale(2.4); opacity:0; } 60%{ opacity:1; } 100%{ transform:rotate(-8deg) scale(1); opacity:1; } }
+  .success .tnum{ margin-top:20px; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink-soft); }
+  .success .tnum b{ color:var(--ink); font-size:15px; }
+  .success p{ font-size:13.5px; color:var(--ink-soft); max-width:280px; margin:14px auto 0; line-height:1.55; }
+  .success button{ margin-top:22px; background:none; border:2px solid var(--ink-soft); color:var(--ink); padding:11px 20px; border-radius:8px; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; cursor:pointer; }
+  .gear{
+    position:fixed; bottom:16px; right:16px; width:38px; height:38px; border-radius:50%;
+    background:var(--bg-2); border:1px solid var(--metal-line); color:var(--steel-dim);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; z-index:10;
+  }
+  .cfg-modal{ display:none; position:fixed; inset:0; background:rgba(10,10,10,.6); z-index:20; align-items:center; justify-content:center; padding:20px; }
+  .cfg-box{ background:var(--bg-2); border:1px solid var(--metal-line); border-radius:10px; padding:20px; width:100%; max-width:360px; color:var(--steel-text); }
+  .cfg-box h3{ margin:0 0 4px; font-family:'Oswald',sans-serif; font-size:17px; }
+  .cfg-box p{ font-size:12px; color:var(--steel-dim); margin:0 0 14px; line-height:1.5; }
+  .cfg-box input{ background:#181a1c; color:var(--steel-text); border:1px solid var(--metal-line); border-radius:5px; padding:9px 10px; margin-bottom:10px; }
+  .cfg-box input:focus{ border-color:var(--spark); }
+  .cfg-actions{ display:flex; gap:8px; margin-top:14px; }
+  .cfg-actions button{ flex:1; padding:10px; border-radius:6px; border:1px solid var(--metal-line); cursor:pointer; font-family:'Inter',sans-serif; font-weight:600; font-size:13px; }
+  .cfg-actions .save{ background:var(--spark); border-color:var(--spark-dark); color:#241000; }
+  .cfg-actions .close{ background:transparent; color:var(--steel-text); }
+
+  /* ===== v2: aksesibilitas & komponen baru ===== */
+  input[type=text], input[type=number], select, textarea{ font-size:16px; }
+  .field label .hint{ color:#655d4a; }
+  ::placeholder{ color:#6f6753; }
+  button:focus-visible, .chip:focus-visible, select:focus-visible{ outline:3px solid var(--spark-dark); outline-offset:2px; }
+  .chip{ min-height:44px; }
+  .stepper button{ min-height:44px; }
+  .gear{ width:44px; height:44px; padding:0; }
+  .stok{ display:inline-block; margin-left:8px; padding:1px 8px; border-radius:999px; font-size:11px; font-weight:700; font-family:'Inter',sans-serif; }
+  .stok.ok{ background:var(--ok-bg); color:var(--ok); border:1px solid var(--ok); }
+  .stok.warn{ background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn); }
+  .offline-flag{ flex-wrap:wrap; }
+  .offline-flag .link-btn{ margin:0 0 0 auto; }
+  .cfg-status{ font-size:12px; min-height:16px; margin:2px 0 0; color:var(--steel-dim); line-height:1.4; }
+  .cfg-status.ok{ color:#7fcf93; }
+  .cfg-status.bad{ color:#ff9c8f; }
+  .cfg-actions{ flex-wrap:wrap; }
+  @media (prefers-reduced-motion:reduce){
+    .stamp{ animation:none; transform:rotate(-8deg) scale(1); opacity:1; }
+    button.submit{ transition:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="floor-label">PT RAYARD DELI INDONESIA · GUDANG TOOLS</div>
+
+  <div class="wrap">
+    <div class="hanger">
+      <svg width="60" height="20" viewBox="0 0 60 20"><path d="M30 0 C 30 12, 12 8, 12 18 C 12 8, 48 8, 48 18 C 48 8, 30 12, 30 0" stroke="#4a5057" stroke-width="2.4" fill="none"/></svg>
+    </div>
+
+    <div class="ticket">
+      <div class="punch"></div>
+
+      <div id="formView">
+        <div class="head">
+          <div class="eyebrow">Form Internal · Gudang RDI</div>
+          <div class="title">Pengajuan Asah</div>
+          <div class="sub">Ajukan alat potong tumpul untuk dikirim ke vendor asah</div>
+          <div class="ticket-meta">
+            <span>No. Tiket<br><b id="ticketNo">—</b></span>
+            <span style="text-align:right">Tanggal<br><b id="ticketDate">—</b></span>
+          </div>
+        </div>
+
+        <div class="body">
+          <div class="offline-flag" id="offlineFlag" role="status"><span class="dot"></span> <span id="flagText"></span><button type="button" class="link-btn" id="flagRetry" style="display:none">Kirim ulang</button></div>
+          <div class="errbox" id="errBox" role="alert"></div>
+
+          <div class="field">
+            <label for="fOperator">Nama Pengaju / Operator <span class="req">*</span></label>
+            <input type="text" id="fOperator" placeholder="Nama lengkap operator produksi" list="operatorList" autocomplete="off">
+            <datalist id="operatorList"></datalist>
+          </div>
+
+          <div class="field">
+            <label for="fMesin">Mesin <span class="req">*</span></label>
+            <div class="mesin-row">
+              <select id="fMesin">
+                <option value="">— Pilih mesin —</option>
+              </select>
+            </div>
+            <button type="button" class="link-btn" id="btnAddMesin">+ Tambah mesin baru</button>
+          </div>
+
+          <div class="field">
+            <label for="fAlat">Alat / Spesifikasi <span class="req">*</span><span class="hint">brand &amp; ukuran</span></label>
+            <select id="fAlat" disabled>
+              <option value="">Pilih mesin dahulu…</option>
+            </select>
+            <div class="tool-preview" id="toolPreview"></div>
+            <button type="button" class="link-btn" id="toggleAlt" aria-expanded="false">Alat tidak ada di daftar? Pilih ukuran lain ▾</button>
+
+            <div class="alt-box" id="altBox" style="display:none">
+              <select id="fAlatAlt" aria-label="Cari dari semua alat">
+                <option value="">— Cari dari semua alat / semua mesin —</option>
+              </select>
+              <div class="manual-grid" id="manualGrid" style="display:none">
+                <input type="text" id="mKode" placeholder="Kode alat, mis. XYZ-SB-01">
+                <input type="text" id="mBrand" placeholder="Brand / merk">
+                <input type="text" id="mSpek" placeholder="Spesifikasi / ukuran">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fQty">Jumlah (Qty) <span class="req">*</span></label>
+            <div class="qty-row">
+              <div class="stepper">
+                <button type="button" id="qtyMinus">−</button>
+                <input type="text" id="fQty" value="1" inputmode="numeric">
+                <button type="button" id="qtyPlus">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label id="lblKondisi">Kondisi Alat <span class="req">*</span></label>
+            <div class="chips" id="kondisiChips" role="radiogroup" aria-labelledby="lblKondisi">
+              <button type="button" class="chip" role="radio" aria-checked="false" data-v="Tumpul">Tumpul</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-v="Gompal">Gompal</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-v="Patah">Patah</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-v="Aus / Gundul">Aus / Gundul</button>
+              <button type="button" class="chip" role="radio" aria-checked="false" data-v="Lainnya">Lainnya</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="fPemakaian">Aktual Pemakaian di Mesin <span class="hint">opsional</span></label>
+            <div class="qty-row">
+              <div class="stepper" style="flex:0 0 auto">
+                <button type="button" id="pmkMinus">−</button>
+                <input type="text" id="fPemakaian" value="0" inputmode="numeric">
+                <button type="button" id="pmkPlus">+</button>
+              </div>
+              <div class="unit-toggle" id="unitToggle" role="group" aria-label="Satuan pemakaian">
+                <button type="button" class="on" data-u="Hari" aria-pressed="true">Hari</button>
+                <button type="button" data-u="Minggu" aria-pressed="false">Minggu</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Foto Kondisi Alat <span class="hint">opsional</span></label>
+            <input type="file" id="fFoto" accept="image/*" capture="environment" style="display:none">
+            <button type="button" class="photo-zone" id="photoZoneBtn">📷 Ambil / Pilih Foto</button>
+            <div class="photo-preview" id="photoPreview" style="display:none">
+              <img id="photoImg" alt="Preview foto alat">
+              <button type="button" id="photoRemove">×</button>
+            </div>
+          </div>
+
+          <div class="field" style="margin-bottom:6px">
+            <label for="fCatatan">Catatan <span class="hint">opsional</span></label>
+            <textarea id="fCatatan" placeholder="Contoh: gigi pecah 2 buah di sisi kiri…"></textarea>
+          </div>
+
+          <hr class="divider">
+
+          <div class="submit-wrap">
+            <button class="submit" id="btnSubmit">Ajukan Asah</button>
+          </div>
+          <div class="footnote">Data langsung tercatat ke sheet <b>Pengajuan Asah</b> gudang.<br>Gudang akan verifikasi &amp; teruskan ke vendor sesuai antrian.</div>
+        </div>
+      </div>
+
+      <div class="success" id="successView">
+        <div class="stamp">Diterima</div>
+        <div class="tnum">No. Tiket<br><b id="doneTicket">—</b></div>
+        <p id="doneDetail">Pengajuan asah telah tercatat. Gudang akan mengonfirmasi &amp; menjadwalkan pengiriman ke vendor.</p>
+        <button id="btnAgain">+ Ajukan Alat Lain</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="gear" id="gearBtn" title="Pengaturan" aria-label="Pengaturan koneksi">⚙</button>
+
+  <div class="cfg-modal" id="cfgModal" role="dialog" aria-modal="true" aria-label="Pengaturan koneksi">
+    <div class="cfg-box">
+      <h3>Pengaturan Koneksi</h3>
+      <p>Tempel URL Web App Google Apps Script (deploy sebagai "Web app", akses "Anyone"). Cukup diisi sekali per perangkat.</p>
+      <input type="text" id="cfgApiUrl" placeholder="https://script.google.com/macros/s/…/exec" style="width:100%" autocomplete="off" spellcheck="false">
+      <div class="cfg-status" id="cfgStatus" role="status"></div>
+      <div class="cfg-actions">
+        <button class="close" id="cfgClose">Tutup</button>
+        <button class="close" id="cfgTest">Tes koneksi</button>
+        <button class="save" id="cfgSave">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cfg-modal" id="mesinModal" role="dialog" aria-modal="true" aria-label="Tambah mesin baru">
+    <div class="cfg-box">
+      <h3>Tambah Mesin Baru</h3>
+      <p>Mesin ini tersimpan di perangkat ini dan langsung bisa dipilih. Alat untuk mesin baru belum terdaftar otomatis — gunakan "Pilih ukuran lain" di bawah untuk cari alat dari mesin lain, atau isi manual.</p>
+      <input type="text" id="newMesinCode" placeholder="Kode mesin, mis. RDS050" style="width:100%">
+      <input type="text" id="newMesinName" placeholder="Nama proses / mesin, mis. Rip Saw" style="width:100%">
+      <div class="cfg-actions">
+        <button class="close" id="mesinClose">Batal</button>
+        <button class="save" id="mesinSave">Tambah &amp; Pilih</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var BASE_DATA = {"machines": [{"code": "RDS001", "name": "Panel saw", "tools": [{"kode": "Leu-SB-01", "nama": "Saw Blade-Leuco", "spek": "180 X 4,85-5,65 X 45_Z36", "brand": "Leuco"}, {"kode": "Leu-SB-02", "nama": "Saw Blade-Leuco", "spek": "450 X 4,8/3,5 X 60_Z72", "brand": "Leuco"}, {"kode": "Leu-SB-03", "nama": "Saw Blade-Leuco", "spek": "450 X 4,8/3,5 X 60_Z84", "brand": "Leuco"}, {"kode": "Leu-SB-05", "nama": "Saw Blade-Leuco", "spek": "450 X 4,8/3,5 X 60_Z72", "brand": "Leuco"}]}, {"code": "RDS002", "name": "Fourside edge banding", "tools": [{"kode": "Leu-CT-01", "nama": "Cutter-Leuco", "spek": "150 X 42,9/80 X 45/70_L", "brand": "Leuco"}, {"kode": "Leu-CT-02", "nama": "Cutter-Leuco", "spek": "150 X 42,9/80 X 45/70_R", "brand": "Leuco"}, {"kode": "Leu-CT-03", "nama": "Cutter-Leuco", "spek": "180 X 43 X 35_Z8+8_L", "brand": "Leuco"}, {"kode": "Leu-CT-04", "nama": "Cutter-Leuco", "spek": "180 X 43 X 35_Z8+8_R", "brand": "Leuco"}, {"kode": "Leu-CT-05", "nama": "Cutter-Leuco", "spek": "200 X 42,9/60 X 60_L", "brand": "Leuco"}, {"kode": "Leu-CT-06", "nama": "Cutter-Leuco", "spek": "200 X 42,9/60 X 60_R", "brand": "Leuco"}, {"kode": "Leu-CT-07", "nama": "Cutter-Leuco", "spek": "250 X 8 X 60_Z54+27_L", "brand": "Leuco"}, {"kode": "Leu-CT-08", "nama": "Cutter-Leuco", "spek": "250 X 8 X 60_Z54+27_R", "brand": "Leuco"}]}, {"code": "RDS003", "name": "Single Edging", "tools": [{"kode": "Leu-CT-09", "nama": "Cutter-Leuco", "spek": "125 X 43/80 X 45/70_L", "brand": "Leuco"}, {"kode": "Leu-CT-10", "nama": "Cutter-Leuco", "spek": "125 X 43/80 X 45/70_R", "brand": "Leuco"}]}, {"code": "RDS004", "name": "Double Edging", "tools": [{"kode": "Leu-CT-09", "nama": "Cutter-Leuco", "spek": "125 X 43/80 X 45/70_L", "brand": "Leuco"}, {"kode": "Leu-CT-10", "nama": "Cutter-Leuco", "spek": "125 X 43/80 X 45/70_R", "brand": "Leuco"}]}, {"code": "RDS015", "name": "Panel saw", "tools": [{"kode": "Leu-SB-02", "nama": "Saw Blade-Leuco", "spek": "450 X 4,8/3,5 X 60_Z72", "brand": "Leuco"}, {"kode": "LEU-CT-49", "nama": "MILLING CUTTER", "spek": "125x33.1/40.1x30_Z3+3", "brand": "Leuco"}]}, {"code": "RDS017", "name": "CNC Cutting/Cut & Drill", "tools": [{"kode": "AKE-SB-01", "nama": "Saw blade-Ake", "spek": "200 X 4,8-5,8/3,5 X 45_Z36", "brand": "Ake"}, {"kode": "AKE-SB-04", "nama": "Saw Blade-Ake", "spek": "400 X 4,4/3,2 X 60_Z72", "brand": "Ake"}, {"kode": "Hau-SB-01", "nama": "Saw Blade-Haupt", "spek": "200 X 4,3/5,3 X 45_Z40", "brand": "Haupt"}, {"kode": "Hau-SB-02", "nama": "Saw blade-Haupt", "spek": "400 X 4,4 X 60_Z84", "brand": "Haupt"}, {"kode": "Hau-SB-07", "nama": "Saw Blade-Haupt", "spek": "200 X 4,3/5,3 X 45_Z40", "brand": "Haupt"}, {"kode": "Lei-CT-01", "nama": "Cutter-Leitz", "spek": "200,3D30Z20/20/20/36/20/20", "brand": "Leitz"}, {"kode": "Lei-SB-01", "nama": "Saw blade-Leitz", "spek": "280 X 4/3 X 30_Z72", "brand": "Leitz"}, {"kode": "Leu-SB-06", "nama": "Saw blade-Leuco", "spek": "400 X 4,4 X 60_Z84", "brand": "Leuco"}]}, {"code": "RDS018", "name": "CNC Cutting/Cut & Drill", "tools": [{"kode": "AKE-SB-01", "nama": "Saw blade-Ake", "spek": "200 X 4,8-5,8/3,5 X 45_Z36", "brand": "Ake"}, {"kode": "AKE-SB-04", "nama": "Saw Blade-Ake", "spek": "400 X 4,4/3,2 X 60_Z72", "brand": "Ake"}, {"kode": "Hau-SB-01", "nama": "Saw Blade-Haupt", "spek": "200 X 4,3/5,3 X 45_Z40", "brand": "Haupt"}, {"kode": "Hau-SB-02", "nama": "Saw blade-Haupt", "spek": "400 X 4,4 X 60_Z84", "brand": "Haupt"}, {"kode": "Hau-SB-07", "nama": "Saw Blade-Haupt", "spek": "200 X 4,3/5,3 X 45_Z40", "brand": "Haupt"}, {"kode": "Hau-SB-08", "nama": "Saw Blade-Haupt", "spek": "400X4,4X60_Z84", "brand": "Haupt"}, {"kode": "Lei-CT-01", "nama": "Cutter-Leitz", "spek": "200,3D30Z20/20/20/36/20/20", "brand": "Leitz"}, {"kode": "Lei-SB-01", "nama": "Saw blade-Leitz", "spek": "280 X 4/3 X 30_Z72", "brand": "Leitz"}, {"kode": "Leu-SB-06", "nama": "Saw blade-Leuco", "spek": "400 X 4,4 X 60_Z84", "brand": "Leuco"}]}, {"code": "RDS019", "name": "CNC Cutting/Cut & Drill", "tools": [{"kode": "AKE-SB-01", "nama": "Saw blade-Ake", "spek": "200 X 4,8-5,8/3,5 X 45_Z36", "brand": "Ake"}, {"kode": "AKE-SB-04", "nama": "Saw Blade-Ake", "spek": "400 X 4,4/3,2 X 60_Z72", "brand": "Ake"}, {"kode": "Hau-SB-01", "nama": "Saw Blade-Haupt", "spek": "200 X 4,3/5,3 X 45_Z40", "brand": "Haupt"}, {"kode": "Hau-SB-02", "nama": "Saw blade-Haupt", "spek": "400 X 4,4 X 60_Z84", "brand": "Haupt"}, {"kode": "Hau-SB-07", "nama": "Saw Blade-Haupt", "spek": "200 X 4,3/5,3 X 45_Z40", "brand": "Haupt"}, {"kode": "Hau-SB-08", "nama": "Saw Blade-Haupt", "spek": "400X4,4X60_Z84", "brand": "Haupt"}, {"kode": "Lei-CT-01", "nama": "Cutter-Leitz", "spek": "200,3D30Z20/20/20/36/20/20", "brand": "Leitz"}, {"kode": "Lei-SB-01", "nama": "Saw blade-Leitz", "spek": "280 X 4/3 X 30_Z72", "brand": "Leitz"}, {"kode": "Leu-SB-06", "nama": "Saw blade-Leuco", "spek": "400 X 4,4 X 60_Z84", "brand": "Leuco"}]}, {"code": "RDS020", "name": "Fourside Planner", "tools": [{"kode": "Leu-CT-16", "nama": "Cutter-Leuco", "spek": "180 X 7,5 X 50", "brand": "Leuco"}, {"kode": "Leu-CT-17", "nama": "Cutter-Leuco", "spek": "200 X 12 X 50_Z16", "brand": "Leuco"}, {"kode": "Leu-CT-18", "nama": "Cutter-Leuco", "spek": "200 X 21,5 X 60_Z12", "brand": "Leuco"}, {"kode": "Leu-CT-19", "nama": "Cutter-Leuco", "spek": "200 X 23,5 X 60_Z12", "brand": "Leuco"}]}, {"code": "RDS021", "name": "Fourside Planner", "tools": [{"kode": "Leu-CT-16", "nama": "Cutter-Leuco", "spek": "180 X 7,5 X 50", "brand": "Leuco"}, {"kode": "Leu-CT-17", "nama": "Cutter-Leuco", "spek": "200 X 12 X 50_Z16", "brand": "Leuco"}, {"kode": "Leu-CT-18", "nama": "Cutter-Leuco", "spek": "200 X 21,5 X 60_Z12", "brand": "Leuco"}, {"kode": "Leu-CT-19", "nama": "Cutter-Leuco", "spek": "200 X 23,5 X 60_Z12", "brand": "Leuco"}]}, {"code": "RDS028", "name": "Corner Cutter", "tools": [{"kode": "Guo-SB-01", "nama": "Saw Blade-Guo", "spek": "255 X 3,2/2,2 X 25,4_Z100", "brand": "Guo"}, {"kode": "Hau-SB-06", "nama": "Saw Blade-Haupt", "spek": "255 X 3,2 X 25,4_Z100", "brand": "Haupt"}]}, {"code": "RDS030", "name": "Multiblade", "tools": [{"kode": "Hau-SB-03", "nama": "Saw blade-Haupt", "spek": "270 X 2,8 X 100_Z60", "brand": "Haupt"}]}, {"code": "RDS036", "name": "Cross Cut", "tools": [{"kode": "Hau-SB-04", "nama": "Saw Blade-Haupt", "spek": "300 X 3,2 X 30_Z60", "brand": "Haupt"}]}, {"code": "RDS038", "name": "Double and Milling (KOMPLE)", "tools": [{"kode": "Leu-CT-22", "nama": "Cutter-Leuco", "spek": "220 X 8,3 X 60_Z6", "brand": "Leuco"}, {"kode": "Leu-CT-37", "nama": "Cutter-Leuco", "spek": "220 X 8 X 60_Z12", "brand": "Leuco"}, {"kode": "Leu-CT-41", "nama": "Cutter-Leuco", "spek": "150 X 4/7 X 55_Z18", "brand": "Leuco"}]}, {"code": "RDS040", "name": "Paper Cut", "tools": [{"kode": "Hau-SB-05", "nama": "Saw Blade-Haupt", "spek": "480 X 3,8 X 25,4_Z120", "brand": "Haupt"}, {"kode": "Luc-SB-01", "nama": "Saw Blade-Luckgem", "spek": "480 X 3,8 X 25,4_Z120", "brand": "Luckgem"}]}, {"code": "RDS041", "name": "Curve Edging", "tools": [{"kode": "Leu-CT-11", "nama": "Cutter-Leuco", "spek": "100 X 30,2 X 30_Z3+3_L", "brand": "Leuco"}, {"kode": "Leu-CT-12", "nama": "Cutter-Leuco", "spek": "100 X 30,2 X 30_Z3+3_R", "brand": "Leuco"}, {"kode": "Leu-CT-13", "nama": "Cutter-Leuco", "spek": "100 X 48 X 30_Z3+3", "brand": "Leuco"}, {"kode": "Leu-CT-14", "nama": "Cutter-Leuco", "spek": "100 X 65 X 30_Z3+3", "brand": "Leuco"}, {"kode": "Leu-CT-15", "nama": "Cutter-Leuco", "spek": "125 X 48 X 30_Z3+3", "brand": "Leuco"}]}, {"code": "RDS042", "name": "Curve Edging", "tools": [{"kode": "Leu-CT-11", "nama": "Cutter-Leuco", "spek": "100 X 30,2 X 30_Z3+3_L", "brand": "Leuco"}, {"kode": "Leu-CT-12", "nama": "Cutter-Leuco", "spek": "100 X 30,2 X 30_Z3+3_R", "brand": "Leuco"}, {"kode": "Leu-CT-13", "nama": "Cutter-Leuco", "spek": "100 X 48 X 30_Z3+3", "brand": "Leuco"}, {"kode": "Leu-CT-14", "nama": "Cutter-Leuco", "spek": "100 X 65 X 30_Z3+3", "brand": "Leuco"}, {"kode": "Leu-CT-15", "nama": "Cutter-Leuco", "spek": "125 X 48 X 30_Z3+3", "brand": "Leuco"}]}, {"code": "RDS043", "name": "Fourside Planner", "tools": [{"kode": "Leu-CT-20", "nama": "Cutter-Leuco", "spek": "200 X 7,5 X 60_Z12", "brand": "Leuco"}, {"kode": "Leu-CT-39", "nama": "Cutter-Leuco", "spek": "200 X 6,5 X 60_Z12", "brand": "Leuco"}, {"kode": "Leu-CT-40", "nama": "Cutter-Leuco", "spek": "200 X 7,7 X 60_Z12", "brand": "Leuco"}, {"kode": "Leu-SB-24", "nama": "Saw blade-Leuco", "spek": "250 X 3.4/2.2 X 60_Z60", "brand": "Leuco"}]}], "brands": ["Ake", "Guo", "Haupt", "Leitz", "Leuco", "Luckgem"]};
+  var TOKEN = 'VjAb48xWwzFkrtJlP0TaJUYK';
+  var DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbz9vHxUYy-SEqIM7Fl03YHYUQJPiyUwveXX2jk8gOvJS86WO9RMYbJfOu7jYIaF_Wfc/exec';
+  var LS = { api:'pa_api_url', ops:'pa_operators', queue:'pa_queue', failed:'pa_failed',
+             custom:'pa_custom_machines', master:'pa_master_cache', lastMesin:'pa_last_mesin' };
+  var MAX_TRIES = 8;
+  var POST_TIMEOUT_MS = 25000;
+  var TICKET_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+
+  function $(id){ return document.getElementById(id); }
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+  function lsGet(k, fb){ try{ var v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); }catch(e){ return fb; } }
+  function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
+  function getApiUrl(){ try{ return localStorage.getItem(LS.api) || DEFAULT_API_URL; }catch(e){ return DEFAULT_API_URL; } }
+  function opt(v, t){ var o = document.createElement('option'); o.value = v; o.textContent = t; return o; }
+
+  /* ---------- data mesin & alat ---------- */
+  var data = BASE_DATA;
+  var custom = lsGet(LS.custom, []);
+  var machineByCode = {};
+  var ALL_TOOLS = [];
+
+  var mesinSel = $('fMesin'), alatSel = $('fAlat'), altSel = $('fAlatAlt'), toolPreview = $('toolPreview');
+  var altBox = $('altBox'), toggleAltBtn = $('toggleAlt'), manualGrid = $('manualGrid');
+
+  function indexData(){
+    machineByCode = {};
+    data.machines.forEach(function(m){ machineByCode[m.code] = m; });
+    custom.forEach(function(m){ if(!machineByCode[m.code]) machineByCode[m.code] = m; });
+    var byKode = {};
+    function add(t, mesin){
+      var key = String(t.kode).toUpperCase();
+      var e = byKode[key] || (byKode[key] = { kode:t.kode, brand:t.brand || '-', spek:t.spek || '', nama:t.nama || '',
+                                               siap:t.siap, status:t.status, mesin:[] });
+      if(mesin && e.mesin.indexOf(mesin) < 0) e.mesin.push(mesin);
+    }
+    (data.allTools || []).forEach(function(t){ add(t); });
+    data.machines.forEach(function(m){ m.tools.forEach(function(t){ add(t, m.code); }); });
+    ALL_TOOLS = Object.keys(byKode).map(function(k){ return byKode[k]; })
+      .sort(function(a, b){ return a.kode.localeCompare(b.kode); });
+  }
+
+  function renderMachines(keep){
+    var cur = keep || mesinSel.value;
+    mesinSel.innerHTML = '';
+    mesinSel.appendChild(opt('', '— Pilih mesin —'));
+    var g1 = document.createElement('optgroup'); g1.label = 'Mesin terdaftar';
+    data.machines.forEach(function(m){ g1.appendChild(opt(m.code, m.code + ' — ' + m.name)); });
+    mesinSel.appendChild(g1);
+    var extra = custom.filter(function(c){ return !data.machines.some(function(m){ return m.code === c.code; }); });
+    if(extra.length){
+      var g2 = document.createElement('optgroup'); g2.label = 'Mesin tambahan (perangkat ini)';
+      extra.forEach(function(m){ g2.appendChild(opt(m.code, m.code + ' — ' + m.name + ' (baru)')); });
+      mesinSel.appendChild(g2);
+    }
+    if(cur && machineByCode[cur]) mesinSel.value = cur;
+  }
+
+  function renderAlat(){
+    var m = machineByCode[mesinSel.value];
+    alatSel.innerHTML = '';
+    setPreview(null);
+    resetAlt();
+    if(!m){
+      alatSel.disabled = true;
+      alatSel.appendChild(opt('', 'Pilih mesin dahulu…'));
+      return;
+    }
+    alatSel.disabled = false;
+    alatSel.appendChild(opt('', '— Pilih alat —'));
+    if(!m.tools.length){
+      var oe = opt('', 'Belum ada alat terdaftar untuk mesin ini'); oe.disabled = true; alatSel.appendChild(oe);
+    }
+    m.tools.forEach(function(t, i){ alatSel.appendChild(opt(i, t.kode + ' · ' + t.brand + ' · ' + t.spek)); });
+  }
+
+  function renderAlt(){
+    altSel.innerHTML = '';
+    altSel.appendChild(opt('', '— Cari dari semua alat / semua mesin —'));
+    ALL_TOOLS.forEach(function(t, i){
+      var where = t.mesin.length ? 'biasanya di ' + t.mesin.join('/') : 'belum dipetakan ke mesin';
+      altSel.appendChild(opt(i, t.kode + ' · ' + t.brand + ' · ' + t.spek + '  (' + where + ')'));
+    });
+    altSel.appendChild(opt('manual', '+ Lainnya (isi manual)'));
+  }
+
+  function setPreview(t){
+    toolPreview.textContent = '';
+    if(!t) return;
+    var b = document.createElement('b'); b.textContent = t.kode;
+    toolPreview.appendChild(b);
+    toolPreview.appendChild(document.createTextNode(' — ' + (t.nama || '') + ' · ' + t.spek));
+    if(typeof t.siap === 'number'){
+      var low = (t.status === 'KRITIS' || t.status === 'HABIS');
+      var s = document.createElement('span');
+      s.className = 'stok ' + (low ? 'warn' : 'ok');
+      s.textContent = 'Siap pakai: ' + t.siap + (t.status ? ' · ' + t.status : '');
+      toolPreview.appendChild(s);
+    }
+  }
+
+  /* master dari server (cache lokal + fallback data tertanam) */
+  var cachedMaster = lsGet(LS.master, null);
+  if(cachedMaster && cachedMaster.machines && cachedMaster.machines.length) data = cachedMaster;
+  indexData(); renderMachines(); renderAlt();
+  try{ var lm = localStorage.getItem(LS.lastMesin); if(lm && machineByCode[lm]) mesinSel.value = lm; }catch(e){}
+  renderAlat();
+
+  function fetchMaster(){
+    var url = getApiUrl();
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, 10000);
+    return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'action=master&token=' + encodeURIComponent(TOKEN), { signal: ctrl.signal })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.ok && j.master && j.master.machines && j.master.machines.length) return j.master;
+        throw new Error((j && j.error) || 'Respons daftar alat tidak valid');
+      })
+      .then(function(m){ clearTimeout(timer); return m; }, function(e){ clearTimeout(timer); throw e; });
+  }
+  function refreshMaster(force){
+    if(!navigator.onLine) return Promise.reject(new Error('Tidak ada koneksi'));
+    return fetchMaster().then(function(m){
+      lsSet(LS.master, m);
+      if(force || (alatSel.value === '' && altSel.value === '')){
+        data = m; indexData(); renderMachines(); renderAlt(); renderAlat();
+      }
+      return m;
+    });
+  }
+  refreshMaster(false).catch(function(){ /* pakai cache / data tertanam */ });
+
+  /* ---------- pilih alat ---------- */
+  mesinSel.addEventListener('change', function(){
+    try{ localStorage.setItem(LS.lastMesin, mesinSel.value); }catch(e){}
+    renderAlat();
+  });
+
+  alatSel.addEventListener('change', function(){
+    var m = machineByCode[mesinSel.value];
+    if(!m || alatSel.value === ''){ setPreview(null); return; }
+    setPreview(m.tools[alatSel.value]);
+    altSel.value = ''; toggleManualGrid(false);
+  });
+
+  toggleAltBtn.addEventListener('click', function(){
+    var show = altBox.style.display === 'none';
+    altBox.style.display = show ? 'block' : 'none';
+    toggleAltBtn.setAttribute('aria-expanded', show ? 'true' : 'false');
+    toggleAltBtn.textContent = show ? 'Sembunyikan pilihan lain ▴' : 'Alat tidak ada di daftar? Pilih ukuran lain ▾';
+  });
+  function toggleManualGrid(show){ manualGrid.style.display = show ? 'grid' : 'none'; }
+  altSel.addEventListener('change', function(){
+    if(altSel.value === 'manual'){ toggleManualGrid(true); alatSel.value = ''; setPreview(null); return; }
+    toggleManualGrid(false);
+    if(altSel.value !== ''){ alatSel.value = ''; setPreview(ALL_TOOLS[altSel.value]); }
+    else setPreview(null);
+  });
+  function resetAlt(){
+    altSel.value = '';
+    toggleManualGrid(false);
+    altBox.style.display = 'none';
+    toggleAltBtn.setAttribute('aria-expanded', 'false');
+    toggleAltBtn.textContent = 'Alat tidak ada di daftar? Pilih ukuran lain ▾';
+    $('mKode').value = ''; $('mBrand').value = ''; $('mSpek').value = '';
+  }
+
+  function resolveTool(){
+    if(altSel.value === 'manual'){
+      var kode = $('mKode').value.trim(), brand = $('mBrand').value.trim(), spek = $('mSpek').value.trim();
+      if(!kode || !spek) return null;
+      return { kode:kode, brand:brand || '-', spek:spek };
+    }
+    if(altSel.value !== '') return ALL_TOOLS[altSel.value];
+    var m = machineByCode[mesinSel.value];
+    if(m && alatSel.value !== '') return m.tools[alatSel.value];
+    return null;
+  }
+
+  /* ---------- mesin baru (lokal) ---------- */
+  var mesinModal = $('mesinModal'), cfgModal = $('cfgModal');
+  function openModal(el, focusId){ el.style.display = 'flex'; if(focusId) $(focusId).focus(); }
+  $('btnAddMesin').addEventListener('click', function(){
+    $('newMesinCode').value = ''; $('newMesinName').value = '';
+    openModal(mesinModal, 'newMesinCode');
+  });
+  $('mesinClose').addEventListener('click', function(){ mesinModal.style.display = 'none'; });
+  $('mesinSave').addEventListener('click', function(){
+    var code = $('newMesinCode').value.trim().toUpperCase();
+    var name = $('newMesinName').value.trim();
+    if(!/^[A-Z0-9-]{3,12}$/.test(code) || !name){ alert('Isi kode mesin (3–12 huruf/angka, mis. RDS050) dan nama proses.'); return; }
+    if(machineByCode[code]){ alert('Kode mesin ini sudah ada.'); return; }
+    custom.push({ code:code, name:name, tools:[] });
+    lsSet(LS.custom, custom);
+    indexData(); renderMachines(code);
+    mesinSel.value = code; mesinSel.dispatchEvent(new Event('change'));
+    mesinModal.style.display = 'none';
+    altBox.style.display = 'block';
+    toggleAltBtn.setAttribute('aria-expanded', 'true');
+    toggleAltBtn.textContent = 'Sembunyikan pilihan lain ▴';
+  });
+
+  /* ---------- stepper, unit, kondisi ---------- */
+  function stepper(inputId, minusId, plusId, min, max){
+    var input = $(inputId);
+    function clamp(v){ v = parseInt(v, 10); if(isNaN(v)) v = min; return Math.max(min, Math.min(max, v)); }
+    $(minusId).addEventListener('click', function(){ input.value = clamp((parseInt(input.value, 10) || min) - 1); });
+    $(plusId).addEventListener('click', function(){ input.value = clamp((parseInt(input.value, 10) || min) + 1); });
+    input.addEventListener('input', function(){ input.value = input.value.replace(/\D/g, '').slice(0, 3); });
+    input.addEventListener('blur', function(){ input.value = clamp(input.value); });
+  }
+  stepper('fQty', 'qtyMinus', 'qtyPlus', 1, 999);
+  stepper('fPemakaian', 'pmkMinus', 'pmkPlus', 0, 999);
+
+  var unitToggle = $('unitToggle'), pemakaianUnit = 'Hari';
+  unitToggle.addEventListener('click', function(e){
+    var btn = e.target.closest('button'); if(!btn) return;
+    unitToggle.querySelectorAll('button').forEach(function(b){ b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true');
+    pemakaianUnit = btn.dataset.u;
+  });
+
+  var chipsWrap = $('kondisiChips'), kondisi = '';
+  function setKondisi(btn){
+    chipsWrap.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); c.setAttribute('aria-checked', 'false'); });
+    if(btn){ btn.classList.add('on'); btn.setAttribute('aria-checked', 'true'); kondisi = btn.dataset.v; } else kondisi = '';
+  }
+  chipsWrap.addEventListener('click', function(e){
+    var btn = e.target.closest('.chip'); if(btn) setKondisi(btn);
+  });
+
+  /* ---------- foto ---------- */
+  var fFoto = $('fFoto'), photoZoneBtn = $('photoZoneBtn'), photoPreview = $('photoPreview'), photoImg = $('photoImg');
+  var fotoBase64 = '';
+  function clearPhoto(){
+    fFoto.value = ''; fotoBase64 = ''; photoImg.removeAttribute('src');
+    photoPreview.style.display = 'none'; photoZoneBtn.style.display = 'block';
+  }
+  photoZoneBtn.addEventListener('click', function(){ fFoto.click(); });
+  fFoto.addEventListener('change', function(){
+    var file = fFoto.files[0];
+    if(!file) return;
+    if(!/^image\//.test(file.type)){ showError('File harus berupa gambar.'); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      var scale = Math.min(1, 900 / Math.max(img.width, img.height));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      URL.revokeObjectURL(url);
+      fotoBase64 = dataUrl.split(',')[1];
+      photoImg.src = dataUrl;
+      photoPreview.style.display = 'inline-block';
+      photoZoneBtn.style.display = 'none';
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); showError('Foto tidak bisa dibaca, coba ambil ulang.'); };
+    img.src = url;
+  });
+  $('photoRemove').addEventListener('click', clearPhoto);
+
+  /* ---------- tiket & tanggal ---------- */
+  function genTicketNo(){
+    var d = new Date(), a = new Uint8Array(4), s = '', i;
+    if(window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+    else for(i = 0; i < 4; i++) a[i] = Math.floor(Math.random() * 256);
+    for(i = 0; i < 4; i++) s += TICKET_ALPHABET.charAt(a[i] % TICKET_ALPHABET.length);
+    return 'PA-' + String(d.getFullYear()).slice(2) + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + s;
+  }
+  function fmtDate(d){
+    var days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  var currentTicket = genTicketNo();
+  $('ticketNo').textContent = currentTicket;
+  $('ticketDate').textContent = fmtDate(new Date());
+
+  /* ---------- operator ---------- */
+  var operatorInput = $('fOperator'), operatorList = $('operatorList');
+  (function loadOperators(){
+    var arr = lsGet(LS.ops, []);
+    arr.forEach(function(n){ operatorList.appendChild(opt(n, '')); });
+    if(arr[0]) operatorInput.value = arr[0];
+  })();
+  function saveOperator(name){
+    var arr = lsGet(LS.ops, []);
+    arr = [name].concat(arr.filter(function(n){ return n !== name; })).slice(0, 8);
+    lsSet(LS.ops, arr);
+  }
+
+  /* ---------- pengaturan koneksi ---------- */
+  var cfgInput = $('cfgApiUrl'), cfgStatus = $('cfgStatus');
+  $('gearBtn').addEventListener('click', function(){
+    cfgInput.value = getApiUrl(); cfgStatus.textContent = '';
+    openModal(cfgModal, 'cfgApiUrl');
+  });
+  $('cfgClose').addEventListener('click', function(){ cfgModal.style.display = 'none'; });
+  function validApiUrl(v){ return /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(v); }
+  function saveApiUrl(){
+    var v = cfgInput.value.trim();
+    if(v && !validApiUrl(v)){ cfgStatus.textContent = 'URL harus berbentuk https://script.google.com/macros/s/…/exec'; cfgStatus.className = 'cfg-status bad'; return false; }
+    try{ if(v) localStorage.setItem(LS.api, v); else localStorage.removeItem(LS.api); }catch(e){}
+    return true;
+  }
+  $('cfgSave').addEventListener('click', function(){ if(saveApiUrl()) cfgModal.style.display = 'none'; });
+  $('cfgTest').addEventListener('click', function(){
+    if(!saveApiUrl()) return;
+    cfgStatus.className = 'cfg-status'; cfgStatus.textContent = 'Menguji koneksi…';
+    refreshMaster(true).then(function(m){
+      cfgStatus.className = 'cfg-status ok';
+      cfgStatus.textContent = 'Tersambung. ' + m.machines.length + ' mesin & ' + (m.allTools || []).length + ' alat dimuat dari sheet.';
+    }).catch(function(e){
+      cfgStatus.className = 'cfg-status bad';
+      cfgStatus.textContent = 'Gagal: ' + (e && e.message ? e.message : 'tidak terhubung') + '. Cek deployment (akses "Anyone") & token.';
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ cfgModal.style.display = 'none'; mesinModal.style.display = 'none'; }
+  });
+
+  /* ---------- pengiriman: antrean offline, retry, dedupe ---------- */
+  var flag = $('offlineFlag'), flagText = $('flagText'), flagRetry = $('flagRetry');
+  function getQueue(){ return lsGet(LS.queue, []); }
+  function getFailed(){ return lsGet(LS.failed, []); }
+  function addFailed(item, why){
+    var f = getFailed();
+    f.push({ ticket:item.ticket, payload:Object.assign({}, item, { foto:'', tries:0 }), error:why });
+    lsSet(LS.failed, f.slice(-20));
+  }
+  function updateFlag(){
+    var q = getQueue(), f = getFailed(), msg = '';
+    if(!navigator.onLine) msg = 'Tidak ada koneksi — ' + (q.length ? q.length + ' pengajuan tersimpan & dikirim otomatis nanti' : 'pengajuan akan disimpan & dikirim otomatis nanti');
+    else if(q.length) msg = q.length + ' pengajuan menunggu dikirim…';
+    if(f.length) msg += (msg ? ' · ' : '') + f.length + ' pengajuan ditolak server (' + f.slice(0, 3).map(function(x){ return x.ticket; }).join(', ') + ')';
+    flag.style.display = msg ? 'flex' : 'none';
+    flagText.textContent = msg;
+    flagRetry.style.display = f.length ? 'inline-block' : 'none';
+  }
+  flagRetry.addEventListener('click', function(){
+    var q = getQueue();
+    getFailed().forEach(function(x){ q.push(Object.assign({}, x.payload, { tries:0 })); });
+    lsSet(LS.queue, q); lsSet(LS.failed, []);
+    updateFlag(); flushQueue();
+  });
+
+  /* Hasil: {kind:'ok'|'reject'|'retry', res?, error?}. Yang dianggap sukses HANYA ok:true dari server. */
+  function postPayload(payload){
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, POST_TIMEOUT_MS);
+    var body = JSON.stringify(Object.assign({}, payload, { token:TOKEN, tries:undefined }));
+    return fetch(getApiUrl(), { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body:body, signal:ctrl.signal })
+      .then(function(res){ return res.text(); })
+      .then(function(txt){
+        var j;
+        try{ j = JSON.parse(txt); }
+        catch(e){ return { kind:'retry', error:'Respons server tidak dikenali (cek deployment: akses harus "Anyone").' }; }
+        if(j && j.ok) return { kind:'ok', res:j };
+        if(j && (j.code === 'BUSY' || j.code === 'SERVER')) return { kind:'retry', error:j.error || 'Server bermasalah.' };
+        return { kind:'reject', error:(j && j.error) || 'Ditolak server.' };
+      })
+      .catch(function(e){
+        return { kind:'retry', error: e && e.name === 'AbortError' ? 'Koneksi lambat (timeout).' : 'Tidak ada koneksi.' };
+      })
+      .then(function(r){ clearTimeout(timer); return r; });
+  }
+
+  var flushing = false;
+  function flushQueue(){
+    if(flushing || !navigator.onLine) return Promise.resolve();
+    flushing = true;
+    function step(){
+      var q = getQueue();
+      if(!q.length) return Promise.resolve();
+      return postPayload(q[0]).then(function(r){
+        if(r.kind === 'ok'){ q.shift(); lsSet(LS.queue, q); return step(); }
+        if(r.kind === 'reject'){ var bad = q.shift(); lsSet(LS.queue, q); addFailed(bad, r.error); return step(); }
+        q[0].tries = (q[0].tries || 0) + 1;
+        if(q[0].tries >= MAX_TRIES){ var dead = q.shift(); lsSet(LS.queue, q); addFailed(dead, r.error); return step(); }
+        lsSet(LS.queue, q);   // coba lagi nanti
+      });
+    }
+    return step().then(function(){ flushing = false; updateFlag(); }, function(){ flushing = false; updateFlag(); });
+  }
+  window.addEventListener('online', function(){ updateFlag(); flushQueue(); });
+  window.addEventListener('offline', updateFlag);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) flushQueue(); });
+  setInterval(flushQueue, 60000);
+  updateFlag(); flushQueue();
+
+  function enqueue(payload){
+    var q = getQueue(); q.push(payload);
+    if(lsSet(LS.queue, q)) return 'ok';
+    q.pop(); q.push(Object.assign({}, payload, { foto:'' }));   // memori penuh: buang foto, data tetap aman
+    return lsSet(LS.queue, q) ? 'nofoto' : 'fail';
+  }
+
+  /* ---------- submit ---------- */
+  var errBox = $('errBox'), btnSubmit = $('btnSubmit'), sending = false;
+  function showError(msg){ errBox.textContent = msg; errBox.style.display = 'block'; }
+  function clearError(){ errBox.style.display = 'none'; }
+  function setBusy(b){ sending = b; btnSubmit.disabled = b; btnSubmit.textContent = b ? 'Mengirim…' : 'Ajukan Asah'; }
+
+  btnSubmit.addEventListener('click', function(){
+    if(sending) return;
+    clearError();
+    var operator = operatorInput.value.trim();
+    var m = machineByCode[mesinSel.value];
+    var catatan = $('fCatatan').value.trim();
+
+    if(operator.length < 2){ showError('Isi nama pengaju terlebih dahulu.'); operatorInput.focus(); return; }
+    if(!m){ showError('Pilih mesin terlebih dahulu.'); mesinSel.focus(); return; }
+    var tool = resolveTool();
+    if(!tool){ showError('Pilih alat / spesifikasi, atau isi manual di "Pilih ukuran lain".'); return; }
+    if(!kondisi){ showError('Pilih kondisi alat.'); return; }
+    if(kondisi === 'Lainnya' && !catatan){ showError('Kondisi "Lainnya" wajib dijelaskan di kolom Catatan.'); $('fCatatan').focus(); return; }
+
+    var qty = Math.max(1, Math.min(999, parseInt($('fQty').value, 10) || 1));
+    var pemakaian = Math.max(0, parseInt($('fPemakaian').value, 10) || 0);
+
+    var payload = {
+      ticket: currentTicket,
+      tanggalPengajuan: fmtDate(new Date()),
+      namaPengaju: operator,
+      mesin: m.code + ' — ' + m.name,
+      kodeMesin: m.code,
+      brand: tool.brand,
+      kodeAlat: tool.kode,
+      spesifikasi: tool.kode + ' · ' + tool.spek,
+      qty: qty,
+      kondisi: kondisi,
+      pemakaian: pemakaian > 0 ? pemakaian + ' ' + pemakaianUnit : '',
+      catatan: catatan,
+      foto: fotoBase64 || ''
+    };
+    saveOperator(operator);
+    submitPayload(payload);
+  });
+
+  function submitPayload(payload){
+    setBusy(true);
+    function queueIt(){
+      var st = enqueue(payload);
+      updateFlag();
+      if(st === 'fail'){ showError('Gagal menyimpan antrean (memori perangkat penuh). Kirim ulang saat online.'); setBusy(false); return; }
+      showSuccess(payload, { queued:true, fotoDropped: st === 'nofoto' });
+      setBusy(false);
+    }
+    if(!navigator.onLine){ queueIt(); return; }
+    postPayload(payload).then(function(r){
+      if(r.kind === 'ok'){ showSuccess(payload, { res:r.res }); setBusy(false); }
+      else if(r.kind === 'reject'){ showError('Ditolak server: ' + r.error); setBusy(false); }
+      else queueIt();
+    });
+  }
+
+  function showSuccess(payload, o){
+    $('formView').style.display = 'none';
+    $('successView').style.display = 'block';
+    $('doneTicket').textContent = payload.ticket;
+    var t;
+    if(o.queued){
+      t = 'Belum ada koneksi ke server — pengajuan tersimpan di perangkat ini dan akan terkirim otomatis begitu online kembali.';
+      if(o.fotoDropped) t += ' Foto tidak ikut tersimpan (memori penuh); tunjukkan alat langsung ke gudang.';
+    } else if(o.res && o.res.duplicate){
+      t = 'Pengajuan dengan tiket ini sudah tercatat sebelumnya. Tidak ada data ganda.';
+    } else {
+      t = 'Pengajuan asah untuk ' + payload.spesifikasi + ' (' + payload.qty + ' unit) telah tercatat. Gudang akan verifikasi & menjadwalkan pengiriman ke vendor.';
+      if(o.res && o.res.fotoError) t += ' Foto gagal disimpan; tunjukkan alat langsung ke gudang.';
+    }
+    $('doneDetail').textContent = t;
+    $('btnAgain').focus();
+  }
+
+  $('btnAgain').addEventListener('click', function(){
+    $('successView').style.display = 'none';
+    $('formView').style.display = 'block';
+    currentTicket = genTicketNo();
+    $('ticketNo').textContent = currentTicket;
+    $('ticketDate').textContent = fmtDate(new Date());
+    renderAlat();   // mesin & operator dipertahankan (biasanya ajukan beberapa alat dari mesin yang sama)
+    $('fQty').value = '1'; $('fPemakaian').value = '0'; $('fCatatan').value = '';
+    setKondisi(null); clearPhoto(); clearError();
+  });
+})();
+</script>
+</body>
+</html>

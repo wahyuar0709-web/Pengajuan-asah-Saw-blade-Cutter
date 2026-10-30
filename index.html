@@ -1,5 +1,27 @@
-  /* ---------- offline: service worker ---------- */
-  if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+(function(){
+  var premiumCSS = ""+
+    "body{opacity:0; transition:opacity .45s ease, transform .45s ease;}"+
+    "body.app-ready{opacity:1;}"+
+    ".ticket, .cfg-box, .success, .gear, .photo-zone, .submit, .chip, .stepper button, .unit-toggle button, .link-btn, .cfg-actions button{transform:translateY(8px); opacity:0; animation:premiumFadeSlide .55s cubic-bezier(.2,.8,.2,1) forwards;}"+
+    ".ticket{animation-delay:.08s;} .cfg-box{animation-delay:.18s;} .success{animation-delay:.16s;} .gear{animation-delay:.22s;} .photo-zone{animation-delay:.26s;} .submit{animation-delay:.3s;} .chip{animation-delay:var(--delay,0s);} .stepper button, .unit-toggle button{animation-delay:.14s;} .cfg-actions button:nth-child(1){animation-delay:.12s;} .cfg-actions button:nth-child(2){animation-delay:.18s;} .cfg-actions button:nth-child(3){animation-delay:.24s;}"+
+    ".field{opacity:0; transform:translateY(12px); animation:fieldReveal .45s ease forwards;}"+
+    ".field:nth-child(1){animation-delay:.05s;} .field:nth-child(2){animation-delay:.09s;} .field:nth-child(3){animation-delay:.13s;} .field:nth-child(4){animation-delay:.17s;} .field:nth-child(5){animation-delay:.21s;} .field:nth-child(6){animation-delay:.25s;} .field:nth-child(7){animation-delay:.29s;} .field:nth-child(8){animation-delay:.33s;} .field:nth-child(9){animation-delay:.37s;} .field:nth-child(10){animation-delay:.41s;}"+
+    ".chip, .stepper button, .unit-toggle button, .link-btn, .photo-zone, .submit, .gear, .cfg-actions button{transition:transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease, opacity .2s ease;}"+
+    ".chip:hover, .stepper button:hover, .unit-toggle button:hover, .link-btn:hover, .photo-zone:hover, .submit:hover, .gear:hover, .cfg-actions button:hover{transform:translateY(-2px) scale(1.01); box-shadow:0 8px 18px rgba(0,0,0,.12);}"+
+    ".chip:active, .stepper button:active, .unit-toggle button:active, .submit:active, .photo-zone:active{transform:translateY(0) scale(.99);}"+
+    ".chip.on{box-shadow:0 0 0 6px rgba(239,123,44,.08);} .submit{position:relative; overflow:hidden;} .submit::after{content:''; position:absolute; inset:0; background:linear-gradient(120deg, transparent, rgba(255,255,255,.35), transparent); transform:translateX(-120%); transition:transform .5s ease;} .submit:hover::after{transform:translateX(120%);} " +
+    "@keyframes premiumFadeSlide{0%{opacity:0; transform:translateY(16px) scale(.98);} 100%{opacity:1; transform:translateY(0) scale(1);}}"+
+    "@keyframes fieldReveal{0%{opacity:0; transform:translateY(14px);} 100%{opacity:1; transform:translateY(0);}}";
+
+  var style = document.createElement('style');
+  style.textContent = premiumCSS;
+  document.head.appendChild(style);
+
+  requestAnimationFrame(function(){
+    document.body.classList.add('app-ready');
+  });
+
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
     window.addEventListener('load', function(){
       navigator.serviceWorker.register('sw.js').then(function(reg){
         function forceRefreshIfNewWorker(){
@@ -29,3 +51,4 @@
       }).catch(function(){});
     });
   }
+})();

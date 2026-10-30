@@ -1,5 +1,6 @@
 /* Service worker — Pengajuan Asah. Naikkan VERSION setiap file statis berubah. */
-var VERSION = 'pa-v3';
+var APP_VERSION = '2026.10.30.1';
+var VERSION = 'pa-' + APP_VERSION;
 var CORE = ['./', 'index.html', 'manifest.webmanifest', 'logo.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 self.addEventListener('install', function (e) {
@@ -12,6 +13,12 @@ self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
     return Promise.all(keys.filter(function (k) { return k !== VERSION; }).map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
+});
+
+self.addEventListener('message', function (event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', function (e) {

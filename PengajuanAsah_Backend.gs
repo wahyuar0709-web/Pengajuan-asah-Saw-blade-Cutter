@@ -44,6 +44,7 @@
 var SHARED_TOKEN = 'VjAb48xWwzFkrtJlP0TaJUYK';
 
 /* ---- KONFIGURASI ---- */
+var SPREADSHEET_ID = ''; // isi ID spreadsheet target, contoh: '1AbC...'. Kosongkan jika ingin pakai spreadsheet aktif di Apps Script.
 var NOTIFY_EMAIL = '';          // WAJIB DIISI, mis. 'gudang@perusahaan.com'. Boleh beberapa, pisah koma.
 var MAX_PER_HARI = 20;          // maks pengajuan per hari (semua operator)
 var MAX_FOTO_PER_HARI = 10;     // maks foto tersimpan per hari
@@ -70,6 +71,10 @@ var KONDISI_OK = ['Tumpul', 'Gompal', 'Patah', 'Aus / Gundul', 'Lainnya'];
 var MAX_FOTO_B64 = 1500000;
 var MASTER_CACHE_KEY = 'master_v3';
 var MASTER_CACHE_SEC = 300;
+
+function getActiveSpreadsheet_() {
+  return SPREADSHEET_ID ? SpreadsheetApp.openById(SPREADSHEET_ID) : SpreadsheetApp.getActiveSpreadsheet();
+}
 
 /* ============================== POST ============================== */
 
@@ -182,7 +187,7 @@ function validate_(d) {
   if (KONDISI_OK.indexOf(d.kondisi) < 0) return 'Kondisi alat tidak valid.';
   if (d.kondisi === 'Lainnya' && !clean_(d.catatan, 500)) return 'Kondisi "Lainnya" wajib disertai catatan.';
   if (d.foto) {
-    if (typeof d.foto !== 'string' || d.foto.length > MAX_FOTO_B64 || !/^[A-Za-z0-9+\/=]+$/.test(d.foto)) {
+    if (typeof d.foto !== 'string' || d.foto.length > MAX_FOTO_B64 || !/^[A-Za-z0-9+\/\=]+$/.test(d.foto)) {
       return 'Foto tidak valid atau terlalu besar.';
     }
   }
@@ -200,7 +205,7 @@ function cleanTicket_(t) {
 /* ============================ SHEET & KOLOM ============================ */
 
 function getSheet_() {
-  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  return getActiveSpreadsheet_().getSheetByName(SHEET_NAME);
 }
 
 /* Baca kolom tiket sekali: peta tiket->baris dan baris terakhir yang berisi tiket. */
@@ -229,7 +234,7 @@ function writeRow_(sheet, map, r, values) {
     var vals = [];
     for (i = 0; i < HEADERS.length; i++) vals.push(values[i] == null ? '' : values[i]);
     var rng = sheet.getRange(r, 1, 1, HEADERS.length);
-    rng.setNumberFormats([FORMATS]);     // "@" = teks murni -> kebal formula-injection
+    rng.setNumberFormats([FORMATS]); // "@" = teks murni -> kebal formula-injection
     rng.setValues([vals]);
     return;
   }
@@ -310,7 +315,8 @@ function saveUsage_(u) {
 function notify_(sheet, r, row) {
   if (!NOTIFY_EMAIL) return;
   try {
-    var url = SpreadsheetApp.getActiveSpreadsheet().getUrl() + '#gid=' + sheet.getSheetId() + '&range=A' + r;
+    var ss = getActiveSpreadsheet_();
+    var url = ss.getUrl() + '#gid=' + sheet.getSheetId() + '&range=A' + r;
     var body = [
       'Pengajuan asah baru masuk.', '',
       'Tiket     : ' + row[C.TIKET],
@@ -386,7 +392,7 @@ function getMaster_() {
   var hit = cache.get(MASTER_CACHE_KEY);
   if (hit) return JSON.parse(hit);
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getActiveSpreadsheet_();
   var warnings = [];
   var mt = readTable_(ss, MASTER_SHEET, true);
   var mp = readTable_(ss, MAPPING_SHEET, true);
@@ -489,13 +495,14 @@ function need_(t, prefix, sheetName) {
 
 /** Jalankan sekali setelah tempel kode. */
 function setup() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getActiveSpreadsheet_();
   var sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
   ensureHeaders_(sheet, true);
   protectHeader_(sheet);
   getOrCreateFotoFolder_();
   Logger.log('Setup OK. Header, dropdown Status, proteksi header, dan folder foto siap.' +
-             (NOTIFY_EMAIL ? '' : ' PERINGATAN: NOTIFY_EMAIL belum diisi -> tidak ada email notifikasi.'));
+             (NOTIFY_EMAIL ? '' : ' PERINGATAN: NOTIFY_EMAIL belum diisi -> tidak ada email notifikasi.') +
+             (SPREADSHEET_ID ? ' Terhubung ke spreadsheet ID: ' + SPREADSHEET_ID : ' Menggunakan spreadsheet aktif.'));
 }
 
 /** Uji cepat dari editor: cek daftar mesin/alat terbaca. */
